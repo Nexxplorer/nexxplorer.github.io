@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Nexxplorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="favicon.png" type="image/p">
+
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --white-90: rgba(255, 255, 255, 0.9);
+            --shadow-1: 0 15px 40px rgba(0, 0, 0, 0.3);
+            --shadow-2: 0 4px 15px rgba(0, 0, 0, 0.25);
+            --overlay: rgba(0, 0, 0, 0.45);
+            --radius-xl: 1.5rem;
+        }
+
+        /* Smooth page fade-in on load */
+        html,
+        body {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Raleway', sans-serif;
+            background: linear-gradient(-45deg, #6985c0, #f2455d, #ffb347, #6dd5ed);
+            background-size: 400% 400%;
+            animation:
+                gradientShift 20s ease infinite,
+                fadeIn 700ms ease forwards;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            /* start transparent, fade to 1 via keyframes */
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .container {
+            text-align: center;
+            background: var(--glass-bg);
+            padding: 3rem;
+            border-radius: var(--radius-xl);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            box-shadow: var(--shadow-1);
+            width: min(90%, 500px);
+            transform: translateY(10px) scale(0.98);
+            opacity: 0;
+            animation: cardIn 600ms ease 200ms forwards;
+        }
+
+        @keyframes cardIn {
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .container h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .greeting {
+            margin: 0 0 1.75rem 0;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .search-box input[type="text"] {
+            width: 100%;
+            padding: 0.8rem 3rem 0.8rem 1rem;
+            border-radius: 2rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            outline: none;
+            background: var(--white-90);
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .search-box input[type="text"]:focus {
+            box-shadow: var(--shadow-2);
+        }
+
+        .search-box button {
+            position: absolute;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.4rem;
+        }
+
+        .search-box button img {
+            height: 20px;
+            width: 20px;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 105%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0.8rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .suggestions div {
+            padding: 0.7rem 1rem;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .suggestions div:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        ::placeholder {
+            color: #555;
+        }
+
+        /* Name overlay modal */
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--overlay);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 300ms ease;
+            z-index: 1000;
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            width: min(90%, 420px);
+            background: var(--glass-bg);
+            color: #fff;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-1);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            padding: 2rem;
+            transform: translateY(10px) scale(0.98);
+            opacity: 0;
+            transition: transform 300ms ease, opacity 300ms ease;
+        }
+
+        .overlay.show .modal {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+        }
+
+        .modal h2 {
+            margin: 0 0 0.5rem 0;
+            font-weight: 700;
+        }
+
+        .modal p {
+            margin: 0 0 1.25rem 0;
+            opacity: 0.9;
+        }
+
+        .name-form {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .name-form input[type="text"] {
+            flex: 1;
+            min-width: 0;
+            padding: 0.8rem 1rem;
+            border-radius: 0.9rem;
+            border: none;
+            outline: none;
+            background: var(--white-90);
+            color: #333;
+            font-weight: 600;
+        }
+
+        .name-form button {
+            padding: 0.8rem 1rem;
+            border-radius: 0.9rem;
+            border: none;
+            background: #ffffff;
+            color: #333;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 120ms ease, box-shadow 120ms ease;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .name-form button:active {
+            transform: translateY(1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Small helper text */
+        .hint {
+            margin-top: 0.6rem;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Nexxplorer</h1>
+        <p id="greeting" class="greeting"></p>
+
+        <form method="GET" action="https://www.google.com/search" class="search-box" autocomplete="off">
+            <input type="text" id="searchInput" name="q" placeholder="Search Google...">
+            <button type="submit" aria-label="Search">
+                <img src="search.png" alt="Search">
+            </button>
+            <div id="suggestionsBox" class="suggestions" style="display: none;"></div>
+        </form>
+    </div>
+
+    <!-- Name prompt overlay -->
+    <div id="nameOverlay" class="overlay" aria-modal="true" role="dialog" aria-labelledby="welcomeTitle">
+        <div class="modal">
+            <h2 id="welcomeTitle">Welcome</h2>
+            <p>What’s your name?</p>
+            <form id="nameForm" class="name-form" autocomplete="off">
+                <input id="nameInput" type="text" name="username" placeholder="Enter your name" maxlength="40" required>
+                <button type="submit">Continue</button>
+            </form>
+            <div class="hint">Press Enter to continue</div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('searchInput');
+        const suggestionsBox = document.getElementById('suggestionsBox');
+        const greetingEl = document.getElementById('greeting');
+
+        const NAME_KEY = 'nexxplorer:name';
+        const overlay = document.getElementById('nameOverlay');
+        const nameForm = document.getElementById('nameForm');
+        const nameInput = document.getElementById('nameInput');
+
+        function setGreeting(name) {
+            if (name && name.trim()) {
+                greetingEl.textContent = `Welcome, ${name.trim()} 👋`;
+            } else {
+                greetingEl.textContent = '';
+            }
+        }
+
+        function showNameOverlay() {
+            overlay.classList.add('show');
+            // Defer focus until overlay is fully in DOM
+            setTimeout(() => nameInput.focus(), 50);
+        }
+
+        function hideNameOverlay() {
+            overlay.classList.remove('show');
+        }
+
+        // Initialize name flow after DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedName = localStorage.getItem(NAME_KEY);
+            if (savedName) {
+                setGreeting(savedName);
+                hideNameOverlay();
+            } else {
+                showNameOverlay();
+            }
+        });
+
+        // Handle name submission
+        nameForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            let name = nameInput.value.trim();
+            // Basic sanitization: strip angle brackets and newlines
+            name = name.replace(/[<>]/g, '').replace(/[\r\n]+/g, ' ').trim();
+            if (!name) {
+                nameInput.focus();
+                return;
+            }
+            localStorage.setItem(NAME_KEY, name);
+            setGreeting(name);
+            hideNameOverlay();
+        });
+
+        // Optional: allow Escape to re-focus name (only if overlay is shown)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && overlay.classList.contains('show')) {
+                nameInput.focus();
+            }
+        });
+
+        // Instant suggestions from Google Suggest API
+        input.addEventListener('input', () => {
+            const query = input.value.trim();
+            if (!query) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+            fetch(`https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    const suggestions = data[1] || [];
+                    if (suggestions.length > 0) {
+                        suggestionsBox.innerHTML = suggestions.map(s => `<div>${s}</div>`).join('');
+                        suggestionsBox.style.display = 'block';
+                    } else {
+                        suggestionsBox.style.display = 'none';
+                    }
+                })
+                .catch(() => {
+                    suggestionsBox.style.display = 'none';
+                });
+        });
+
+        // Click on suggestion
+        suggestionsBox.addEventListener('click', (e) => {
+            if (e.target.tagName.toLowerCase() === 'div') {
+                input.value = e.target.textContent;
+                suggestionsBox.style.display = 'none';
+                input.form.submit();
+            }
+        });
+
+        // Keyboard shortcut: `/` focuses search
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '/' && document.activeElement !== input && !overlay.classList.contains('show')) {
+                e.preventDefault();
+                input.focus();
+            }
+        });
+
+        // Hide suggestions on outside click
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-box')) {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+
+</html>
